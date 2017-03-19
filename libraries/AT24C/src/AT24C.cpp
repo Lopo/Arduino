@@ -49,7 +49,8 @@ size_t at24c::write(const uint32_t address, const uint8_t* data, const size_t le
 	if (length+address>=_size) { // too long
 		return 0;
 		}
-	uint8_t wLen, bSize=min(_page, 16);
+	size_t wLen;
+	uint8_t bSize=min(_page, 16);
 
 	Wire.beginTransmission(_i2c);
 	sendAddress(address);
@@ -116,14 +117,18 @@ size_t at24c::read(const uint32_t address, uint8_t* buf, const size_t length) co
 
 void at24c::clear()
 {
-	uint8_t i;
+	uint16_t i;
 	uint8_t bSize=min(_page, 16);
-	uint32_t bNum=_size/bSize;
+	uint16_t bNum=_size/bSize;
 	uint8_t block[bSize];
 
 	memset(block, 0xff, bSize);
 	for (i=0; i<bNum; i++) {
-		write(i*bSize, block, bSize);
+		Wire.beginTransmission(_i2c);
+		sendAddress(i*bSize);
+		Wire.write(block, bSize);
+		Wire.endTransmission();
+		delay(_wDelay);
 		}
 }
 
